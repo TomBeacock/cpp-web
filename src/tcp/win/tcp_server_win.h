@@ -25,10 +25,10 @@ class Server {
 
   protected:
     virtual void on_message_received(std::span<Byte> message);
+    void send_response(std::vector<Byte> &response) const;
 
   private:
     void accept_connection();
-    void send_response() const;
 
   private:
     WSADATA wsa_data;

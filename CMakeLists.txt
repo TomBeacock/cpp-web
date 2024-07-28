@@ -7,8 +7,12 @@ add_executable(web-server
 	"src/types.h"
 	"src/log.h"
 	"src/assert.h"
-
-	"src/tcp/tcp_server.h")
+	"src/enum_bitmask.h"
+	
+	"src/main.cpp"
+	"src/tcp/tcp_server.h"
+	"src/http/http_server.h" "src/http/http_server.cpp"
+	"src/http/http_message.h" "src/http/http_message.cpp"	"src/http/http_parser.h" "src/http/http_parser.cpp")
 
 set_target_properties(web-server PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
 target_include_directories(web-server PRIVATE "${PROJECT_SOURCE_DIR}/src")

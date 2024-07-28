@@ -73,8 +73,6 @@ void Server::start()
 
         on_message_received(std::span<Byte>(buffer.begin(), bytes_received));
 
-        send_response();
-
         closesocket(this->accept_socket);
     }
 }
@@ -93,24 +91,16 @@ void Server::accept_connection()
     }
 }
 
-void Server::send_response() const
+void Server::send_response(std::vector<Byte> &response) const
 {
-    std::string content =
-        "<!DOCTYPE html><html lang=\"en\"><body><p>Hello "
-        "world</p><img src=\"test.jpeg\"></img></body> </html>";
-    std::string response = std::format(
-        "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: "
-        "{}\n\n{}",
-        content.size(),
-        content);
-
-    LOG_INFO("Sending response\n{}", response);
+    LOG_INFO(
+        "Sending response\n{}", std::string(response.begin(), response.end()));
 
     size_t total_sent = 0;
     while (total_sent < response.size()) {
         int sent = send(
             this->accept_socket,
-            response.c_str(),
+            response.data(),
             static_cast<int>(response.size()),
             0);
         if (sent < 0) {
