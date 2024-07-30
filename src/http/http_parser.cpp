@@ -1,5 +1,7 @@
 #include "http_parser.h"
 
+#include <algorithm>
+#include <cctype>
 #include <format>
 
 namespace Web::Http {
@@ -13,13 +15,31 @@ Status Parser::parse(Message &out_message)
     }
     std::string_view name, value;
     while (get_field_line(name, value) && required_string("\r\n")) {
-        if (auto it = out_message.fields.find(name);
+        // To lowercase
+        std::string name_lower;
+        std::transform(
+            name.begin(), name.end(), name_lower.begin(), [](char c) {
+                return std::tolower(c);
+            });
+
+        // Append field if name already exists
+        if (auto it = out_message.fields.find(name_lower);
             it != out_message.fields.end()) {
+            // Cannot have multiple host fields
+            if (name == "host") {
+                return Status::BadRequest;
+            }
             it->second += std::format(", {}", value);
         } else {
-            out_message.fields[std::string(name)] = std::string(value);
+            out_message.fields[name_lower] = std::string(value);
         }
     }
+    // HTTP/1.1 requires host field
+    if (is_flag_set(out_message.version, Version::Http_1_1) &&
+        !out_message.fields.contains("host")) {
+        return Status::BadRequest;
+    }
+
     if (!required_string("\r\n")) {
         return Status::BadRequest;
     }
