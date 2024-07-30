@@ -20,6 +20,12 @@ constexpr auto operator&(const T lhs, const T rhs)
 }
 
 template <typename T>
+constexpr auto is_flag_set(T value, T flag)
+{
+    return (value & flag) == flag;
+}
+
+template <typename T>
     requires(std::is_enum_v<T> and
              requires(T e) { enable_bitmask_operators(e); })
 constexpr auto bitmask_all =
