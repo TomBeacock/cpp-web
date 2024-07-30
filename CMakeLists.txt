@@ -10,8 +10,11 @@ add_executable(web-server
 	"src/enum_bitmask.h"
 	
 	"src/main.cpp"
+	"src/parser.h" "src/parser.cpp"
+
 	"src/tcp/tcp_server.h"
-	"src/http/http_server.h" "src/http/http_server.cpp"
+
+	"src/uri/uri.h"	"src/uri/uri_parser.h" "src/uri/uri_parser.cpp"	"src/http/http_server.h" "src/http/http_server.cpp"
 	"src/http/http_message.h" "src/http/http_message.cpp"	"src/http/http_parser.h" "src/http/http_parser.cpp")
 
 set_target_properties(web-server PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
