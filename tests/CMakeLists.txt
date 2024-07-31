@@ -15,7 +15,12 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(tests
 	"../src/parser.h" "../src/parser.cpp"
-	"test_uri_parser.cpp" "../src/uri/uri_parser.h" "../src/uri/uri_parser.cpp"
+	"../src/uri/uri_parser.h" "../src/uri/uri_parser.cpp"
+	"../src/http/http_message.h" "../src/http/http_message.cpp"
+	"../src/http/http_parser.h" "../src/http/http_parser.cpp"
+	
+	"test_uri_parser.cpp"
+	"test_http_parser.cpp"
 )
 target_link_libraries(tests PRIVATE GTest::gtest_main)
 target_include_directories(tests PRIVATE "${PROJECT_SOURCE_DIR}/src")
