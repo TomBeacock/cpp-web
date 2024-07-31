@@ -1,36 +1,22 @@
 #pragma once
 
 #include "http_message.h"
+#include "parser.h"
 #include "types.h"
 
-#include <span>
+#include <string>
 
 namespace Web::Http {
-class Parser {
-  public:
-    Status parse(Message &out_message);
-
+class Parser : public Web::Parser {
   protected:
     Parser(
-        const std::span<Byte> &data,
+        const std::string_view &data,
         Version version_mask = bitmask_all<Version>);
 
-    inline bool is_valid() const;
-    inline Char get_current() const;
-
-    bool required_char(Char c);
-    bool required_space();
-    bool required_string(std::string_view str);
-
-    bool optional_whitespace();
-
-    bool get_digit(Nat8 &out_digit);
     bool get_token_char(Char &out_char);
     bool get_token(std::string_view &out_token);
 
     bool get_version(Version &out_version);
-
-    virtual Status get_start_line(Message &out_message) = 0;
 
     bool get_visible_char(Char &out_char);
     bool get_obs_char(Char &out_char);
@@ -41,19 +27,17 @@ class Parser {
         std::string_view &out_value);
 
   protected:
-    std::span<Byte> data;
-    size_t i;
     Version version_mask;
 };
 
 class RequestParser : public Parser {
   public:
     RequestParser(
-        const std::span<Byte> &data,
+        const std::string_view &data,
         Version version_mask = bitmask_all<Version>,
         Method method_mask = bitmask_all<Method>);
 
-    virtual Status get_start_line(Message &out_message) override;
+    Status parse(Request &out_request);
 
   private:
     bool get_method(Method &out_method);
@@ -69,14 +53,4 @@ class RequestParser : public Parser {
   private:
     Method method_mask;
 };
-
-inline bool Web::Http::Parser::is_valid() const
-{
-    return this->i < data.size();
-}
-
-inline Char Parser::get_current() const
-{
-    return this->data[this->i];
-}
 }  // namespace Web::Http

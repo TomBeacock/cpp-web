@@ -5,95 +5,10 @@
 #include <format>
 
 namespace Web::Http {
-Status Parser::parse(Message &out_message)
-{
-    if (Status status = get_start_line(out_message); status != Status::Ok) {
-        return status;
-    }
-    if (!required_string("\r\n")) {
-        return Status::BadRequest;
-    }
-    std::string_view name, value;
-    while (get_field_line(name, value) && required_string("\r\n")) {
-        // To lowercase
-        std::string name_lower;
-        std::transform(
-            name.begin(), name.end(), name_lower.begin(), [](char c) {
-                return std::tolower(c);
-            });
-
-        // Append field if name already exists
-        if (auto it = out_message.fields.find(name_lower);
-            it != out_message.fields.end()) {
-            // Cannot have multiple host fields
-            if (name == "host") {
-                return Status::BadRequest;
-            }
-            it->second += std::format(", {}", value);
-        } else {
-            out_message.fields[name_lower] = std::string(value);
-        }
-    }
-    // HTTP/1.1 requires host field
-    if (is_flag_set(out_message.version, Version::Http_1_1) &&
-        !out_message.fields.contains("host")) {
-        return Status::BadRequest;
-    }
-
-    if (!required_string("\r\n")) {
-        return Status::BadRequest;
-    }
-    // TODO: parse body
-    return Status::Ok;
-}
-
-Parser::Parser(const std::span<Byte> &data, Version version_mask)
-    : data(data),
-      i(0),
+Parser::Parser(const std::string_view &data, Version version_mask)
+    : Web::Parser(data),
       version_mask(version_mask)
 {}
-
-bool Parser::required_char(Char c)
-{
-    if (!is_valid() || get_current() != c) {
-        return false;
-    }
-    this->i++;
-    return true;
-}
-
-bool Parser::required_space()
-{
-    return required_char(' ');
-}
-
-bool Parser::required_string(std::string_view str)
-{
-    for (char c : str) {
-        if (!required_char(c)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool Parser::optional_whitespace()
-{
-    while (is_valid() && (get_current() == ' ' || get_current() == '\t')) {
-        this->i++;
-    }
-    return true;
-}
-
-bool Parser::get_digit(Nat8 &out_digit)
-{
-    if (!is_valid() || get_current() < '0' || get_current() > '9') {
-        return false;
-    }
-    out_digit = get_current() - '0';
-    this->i++;
-    return true;
-}
 
 bool Parser::get_token_char(Char &out_char)
 {
@@ -190,16 +105,16 @@ bool Parser::get_field_line(
 }
 
 RequestParser::RequestParser(
-    const std::span<Byte> &data,
+    const std::string_view &data,
     Version version_mask,
     Method method_mask)
     : Parser(data, version_mask),
       method_mask(method_mask)
 {}
 
-Status RequestParser::get_start_line(Message &out_message)
+Status RequestParser::parse(Request &out_request)
 {
-    Request &out_request = static_cast<Request &>(out_message);
+    // Request line
     if (!(get_request_line(
             out_request.method, out_request.target, out_request.version))) {
         return Status::BadRequest;
@@ -210,6 +125,43 @@ Status RequestParser::get_start_line(Message &out_message)
     if (!valid_version(out_request.version)) {
         return Status::HttpVersionNotSupported;
     }
+
+    if (!required_string("\r\n")) {
+        return Status::BadRequest;
+    }
+
+    // Fields
+    std::string_view name, value;
+    while (get_field_line(name, value) && required_string("\r\n")) {
+        // To lowercase
+        std::string name_lower(name.size(), 0);
+        std::transform(
+            name.begin(), name.end(), name_lower.begin(), [](char c) {
+                return std::tolower(c);
+            });
+
+        // Append field if name already exists
+        if (auto it = out_request.fields.find(name_lower);
+            it != out_request.fields.end()) {
+            // Cannot have multiple host fields
+            if (name == "host") {
+                return Status::BadRequest;
+            }
+            it->second += std::format(", {}", value);
+        } else {
+            out_request.fields[name_lower] = std::string(value);
+        }
+    }
+    // HTTP/1.1 requires host field
+    if (is_flag_set(out_request.version, Version::Http_1_1) &&
+        !out_request.fields.contains("host")) {
+        return Status::BadRequest;
+    }
+
+    if (!required_string("\r\n")) {
+        return Status::BadRequest;
+    }
+    // TODO: parse body
     return Status::Ok;
 }
 

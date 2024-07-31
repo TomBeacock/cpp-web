@@ -21,11 +21,11 @@ void Server::start()
 
 void Server::on_message_received(std::span<Byte> message)
 {
-    LOG_INFO(
-        "Http request recieved\n{}", reinterpret_cast<char *>(message.data()));
+    std::string_view text_message(&message[0], message.size());
+    LOG_INFO("Http request recieved\n{}", text_message);
 
     RequestParser parser(
-        message,
+        text_message,
         Version::Http_1_0 | Version::Http_1_1,
         Method::Get | Method::Head);
     Request request;
