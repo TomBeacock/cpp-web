@@ -1,6 +1,14 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.14)
 
 project(web-server)
+
+option(BUILD_TESTS "Build test suite" ON)
+
+if(BUILD_TESTS)
+	message(STATUS "Buliding tests...")
+	add_subdirectory(tests)
+	message(STATUS "Building tests done")
+endif()
 
 add_executable(web-server
 	"src/base.h"
@@ -17,7 +25,7 @@ add_executable(web-server
 	"src/uri/uri.h"	"src/uri/uri_parser.h" "src/uri/uri_parser.cpp"	"src/http/http_server.h" "src/http/http_server.cpp"
 	"src/http/http_message.h" "src/http/http_message.cpp"	"src/http/http_parser.h" "src/http/http_parser.cpp")
 
-set_target_properties(web-server PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED on)
+set_target_properties(web-server PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED ON)
 target_include_directories(web-server PRIVATE "${PROJECT_SOURCE_DIR}/src")
 
 string(LENGTH "${PROJECT_SOURCE_DIR}/" source_path_length)
