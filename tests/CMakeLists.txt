@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
+message(STATUS "Buliding tests...")
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -17,7 +19,7 @@ add_executable(tests
 	"test_uri_parser.cpp"
 	"test_http_parser.cpp"
 )
-target_link_libraries(tests PRIVATE http-server GTest::gtest_main)
+target_link_libraries(tests PRIVATE cpp-web GTest::gtest_main)
 set_target_properties(tests PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED ON)
 
 include(GoogleTest)
