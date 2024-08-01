@@ -1,8 +1,8 @@
 #pragma once
 
-#include "parser.h"
-#include "types.h"
-#include "uri.h"
+#include "web/parser.h"
+#include "web/types.h"
+#include "web/uri/uri.h"
 
 #include <string>
 

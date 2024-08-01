@@ -1,9 +1,9 @@
 #pragma once
 
 #if defined(PLATFORM_UNIX)
-    #include "unix/tcp_server_unix.h"
+    #include "web/tcp/unix/tcp_server_unix.h"
 #elif defined(PLATFORM_WIN)
-    #include "win/tcp_server_win.h"
+    #include "web/tcp/win/tcp_server_win.h"
 #else
     #error Invalid plaform
 #endif

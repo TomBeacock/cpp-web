@@ -1,7 +1,7 @@
 #pragma once
 
-#include "tcp/tcp_server.h"
-#include "types.h"
+#include "web/tcp/tcp_server.h"
+#include "web/types.h"
 
 #include <span>
 #include <string>

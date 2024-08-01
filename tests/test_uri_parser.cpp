@@ -1,4 +1,4 @@
-#include "uri/uri_parser.h"
+#include "web/uri/uri_parser.h"
 
 #include <gtest/gtest.h>
 

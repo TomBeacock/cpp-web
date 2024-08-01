@@ -1,7 +1,7 @@
 #pragma once
 
-#include "base.h"
-#include "log.h"
+#include "web/base.h"
+#include "web/log.h"
 
 #if defined(BUILD_DEBUG)
     #define INTERNAL_ASSERT_IMPL(check, msg, ...)                              \
