@@ -1,5 +1,6 @@
 #pragma once
 
+#include "web/http/http_message.h"
 #include "web/tcp/tcp_server.h"
 #include "web/types.h"
 
@@ -11,11 +12,24 @@
 namespace Web::Http {
 class Server : public Tcp::Server {
   public:
-    Server(const std::string &ip_address, Nat16 port);
+    struct Config {
+        Version allowed_versions = bitmask_all<Version>;
+        Method allowed_methods = bitmask_all<Method>;
+    };
+
+  public:
+    Server(const std::string &ip_address, Nat16 port, Config config);
 
     void start();
 
+    void send_response(Response &response) const;
+    void send_response(Status status) const;
+
   protected:
-    virtual void on_message_received(std::span<Byte> message) override;
+    virtual void on_message_received(std::span<Byte> message) final;
+    virtual void on_request_received(const Request &request){};
+
+  private:
+    Config config;
 };
 }  // namespace Web::Http

@@ -25,7 +25,7 @@ class Server {
 
   protected:
     virtual void on_message_received(std::span<Byte> message);
-    void send_response(std::vector<Byte> &response) const;
+    void send_message(std::vector<Byte> &message) const;
 
   private:
     void accept_connection();

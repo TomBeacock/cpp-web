@@ -91,17 +91,17 @@ void Server::accept_connection()
     }
 }
 
-void Server::send_response(std::vector<Byte> &response) const
+void Server::send_message(std::vector<Byte> &message) const
 {
     LOG_INFO(
-        "Sending response\n{}", std::string(response.begin(), response.end()));
+        "Sending message\n{}", std::string(message.begin(), message.end()));
 
     size_t total_sent = 0;
-    while (total_sent < response.size()) {
+    while (total_sent < message.size()) {
         int sent = send(
             this->accept_socket,
-            response.data(),
-            static_cast<int>(response.size()),
+            message.data(),
+            static_cast<int>(message.size()),
             0);
         if (sent < 0) {
             break;
@@ -109,7 +109,7 @@ void Server::send_response(std::vector<Byte> &response) const
         total_sent += sent;
     }
 
-    if (total_sent == response.size()) {
+    if (total_sent == message.size()) {
         LOG_INFO("Server response success");
     } else {
         LOG_WARN("Server response failed");

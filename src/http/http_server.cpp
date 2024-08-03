@@ -10,8 +10,9 @@
 
 namespace Web::Http {
 
-Server::Server(const std::string &ip_address, Nat16 port)
-    : Tcp::Server(ip_address, port)
+Server::Server(const std::string &ip_address, Nat16 port, Config config)
+    : Tcp::Server(ip_address, port),
+      config(config)
 {}
 
 void Server::start()
@@ -19,35 +20,32 @@ void Server::start()
     Tcp::Server::start();
 }
 
+void Server::send_response(Response &response) const
+{
+    std::vector<Byte> raw_response = response.to_raw();
+    send_message(raw_response);
+}
+
+void Server::send_response(Status status) const
+{
+    Response response(Version::Http_1_1, status);
+    send_response(response);
+}
+
 void Server::on_message_received(std::span<Byte> message)
 {
     std::string_view text_message(&message[0], message.size());
     LOG_INFO("Http request recieved\n{}", text_message);
 
-    RequestParser parser(
-        text_message,
-        Version::Http_1_0 | Version::Http_1_1,
-        Method::Get | Method::Head);
     Request request;
-    // Try parse request
-    if (Status status = parser.parse(request); status != Status::Ok) {
-        // Send error response
-        Response response(Version::Http_1_1, status);
-        std::vector<Byte> raw_response = response.to_raw();
-        send_response(raw_response);
+    RequestParser parser(
+        text_message, config.allowed_versions, config.allowed_methods);
+    Status status = parser.parse(request);
+    if (status != Status::Ok) {
+        send_response(status);  // Send error status response
         return;
     }
 
-    std::string content =
-        "<!DOCTYPE html><html lang=\"en\"><body><p>Hello world</p><img "
-        "src=\"test.jpeg\"></img></body></html>";
-
-    Response response(Version::Http_1_1, Status::Ok);
-    response.fields["Content-Type"] = "text/html";
-    response.fields["Content-Length"] = std::to_string(content.size());
-    response.body = std::vector<Byte>(content.begin(), content.end());
-    std::vector<Byte> raw_response = response.to_raw();
-    send_response(raw_response);
+    on_request_received(request);
 }
-
 }  // namespace Web::Http
