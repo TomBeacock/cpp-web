@@ -2,14 +2,6 @@ cmake_minimum_required(VERSION 3.14)
 
 project(cpp-web)
 
-if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-	option(WEB_BUILD_TESTS "Build test suite" ON)
-
-	if(WEB_BUILD_TESTS)
-		add_subdirectory(tests)
-	endif()
-endif()
-
 add_library(cpp-web STATIC
 	"include/web/base.h"
 	"include/web/types.h"
@@ -73,4 +65,18 @@ endif()
 # Compiler
 if(MSVC)
 	target_compile_options(cpp-web PUBLIC /Zc:preprocessor)
+endif()
+
+# Standalone options
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	option(WEB_BUILD_TESTS "Build test suite" ON)
+	option(WEB_BUILD_EXAMPLES "Build examples" ON)
+
+	if(WEB_BUILD_TESTS)
+		add_subdirectory(tests)
+	endif()
+
+	if(WEB_BUILD_EXAMPLES)
+		add_subdirectory(examples)
+	endif()
 endif()
