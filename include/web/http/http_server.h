@@ -18,7 +18,7 @@ class Server : public Tcp::Server {
     };
 
   public:
-    Server(const std::string &ip_address, Nat16 port, Config config);
+    Server(std::string_view ip_address, Nat16 port, Config config);
 
     void start();
 

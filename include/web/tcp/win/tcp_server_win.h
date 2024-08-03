@@ -18,7 +18,7 @@
 namespace Web::Tcp::Win {
 class Server {
   public:
-    Server(const std::string &ip_address, Nat16 port);
+    Server(std::string_view ip_address, Nat16 port);
     ~Server();
 
     void start();

@@ -10,7 +10,7 @@
 
 namespace Web::Http {
 
-Server::Server(const std::string &ip_address, Nat16 port, Config config)
+Server::Server(std::string_view ip_address, Nat16 port, Config config)
     : Tcp::Server(ip_address, port),
       config(config)
 {}

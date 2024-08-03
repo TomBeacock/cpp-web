@@ -11,7 +11,7 @@ static void exit_with_error(const std::string &msg)
 }
 
 namespace Web::Tcp::Win {
-Server::Server(const std::string &ip_address, Nat16 port)
+Server::Server(std::string_view ip_address, Nat16 port)
     : wsa_data(),
       service{AF_INET, htons(port), {}},
       listen_socket(),
@@ -29,7 +29,7 @@ Server::Server(const std::string &ip_address, Nat16 port)
     }
 
     // Bind socket
-    inet_pton(AF_INET, ip_address.c_str(), &this->service.sin_addr);
+    inet_pton(AF_INET, ip_address.data(), &this->service.sin_addr);
 
     if (bind(
             this->listen_socket,
