@@ -196,7 +196,7 @@ std::vector<Byte> Response::to_raw() const
     return raw;
 }
 
-Request::Request(Method method, std::string_view target, Version version)
+Request::Request(Method method, Uri::Uri target, Version version)
     : Message(version),
       method(method),
       target(target)

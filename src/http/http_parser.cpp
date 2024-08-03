@@ -1,5 +1,7 @@
 #include "web/http/http_parser.h"
 
+#include "web/uri/uri_parser.h"
+
 #include <algorithm>
 #include <cctype>
 #include <format>
@@ -179,7 +181,7 @@ bool RequestParser::get_method(Method &out_method)
     return true;
 }
 
-bool RequestParser::get_target(std::string &out_target)
+bool RequestParser::get_target(Uri::Uri &out_target)
 {
     size_t j = this->i;
     while (i < this->data.size() && this->data[i] != ' ') {
@@ -188,13 +190,16 @@ bool RequestParser::get_target(std::string &out_target)
     if (i == j) {
         return false;
     }
-    out_target = std::string(&this->data[j], i - j);
+    Uri::Parser uri_parser(std::string_view(&this->data[j], i - j));
+    if (!uri_parser.parse(out_target)) {
+        return false;
+    }
     return true;
 }
 
 bool RequestParser::get_request_line(
     Method &out_method,
-    std::string &out_target,
+    Uri::Uri &out_target,
     Version &out_version)
 {
     if (!(get_method(out_method) && required_space() &&

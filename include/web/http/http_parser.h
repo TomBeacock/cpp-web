@@ -41,10 +41,10 @@ class RequestParser : public Parser {
 
   private:
     bool get_method(Method &out_method);
-    bool get_target(std::string &out_target);
+    bool get_target(Uri::Uri &out_target);
     bool get_request_line(
         Method &out_method,
-        std::string &out_target,
+        Uri::Uri &out_target,
         Version &out_version);
 
     bool valid_method(Method method) const;

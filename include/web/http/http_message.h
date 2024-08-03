@@ -2,6 +2,7 @@
 
 #include "web/enum_bitmask.h"
 #include "web/types.h"
+#include "web/uri/uri.h"
 
 #include <map>
 #include <optional>
@@ -110,11 +111,11 @@ struct Message {
 };
 
 struct Request : public Message {
-    std::string target;
+    Uri::Uri target;
     Method method = Method::Get;
 
     Request() = default;
-    Request(Method method, std::string_view target, Version version);
+    Request(Method method, Uri::Uri target, Version version);
 };
 
 struct Response : public Message {
