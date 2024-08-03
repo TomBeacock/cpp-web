@@ -2,7 +2,6 @@
 
 #include <cstdint>
 
-namespace Web {
 /// Byte
 using Byte = char;
 
@@ -50,4 +49,3 @@ using Char8 = char8_t;
 using Char16 = char16_t;
 /// Character of 32-bit precision
 using Char32 = char32_t;
-}  // namespace Web
