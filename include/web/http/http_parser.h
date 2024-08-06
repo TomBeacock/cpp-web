@@ -1,13 +1,14 @@
 #pragma once
 
+#include "web/enum_bitmask.h"
 #include "web/http/http_message.h"
-#include "web/parser.h"
-#include "web/types.h"
+
+#include <parser/parser.h>
 
 #include <string>
 
 namespace Web::Http {
-class Parser : public Web::Parser {
+class Parser : public Parsing::Parser {
   protected:
     Parser(
         const std::string_view &data,
@@ -25,6 +26,8 @@ class Parser : public Web::Parser {
     bool get_field_line(
         std::string_view &out_name,
         std::string_view &out_value);
+
+    bool valid_version(Version version) const;
 
   protected:
     Version version_mask;
@@ -48,7 +51,6 @@ class RequestParser : public Parser {
         Version &out_version);
 
     bool valid_method(Method method) const;
-    bool valid_version(Version version) const;
 
   private:
     Method method_mask;

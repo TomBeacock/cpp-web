@@ -1,13 +1,14 @@
 #pragma once
 
-#include "web/parser.h"
-#include "web/types.h"
 #include "web/uri/uri.h"
+
+#include <parser/parser.h>
+#include <types/types.h>
 
 #include <string>
 
 namespace Web::Uri {
-class Parser : public Web::Parser {
+class Parser : public Parsing::Parser {
   public:
     Parser(std::string_view data);
 

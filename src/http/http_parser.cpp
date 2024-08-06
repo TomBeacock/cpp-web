@@ -8,44 +8,41 @@
 
 namespace Web::Http {
 Parser::Parser(const std::string_view &data, Version version_mask)
-    : Web::Parser(data),
+    : Parsing::Parser(data),
       version_mask(version_mask)
 {}
 
 bool Parser::get_token_char(Char &out_char)
 {
-    if (!is_valid() || !(get_current() == '!' ||
-                         (get_current() >= '#' && get_current() <= '\'') ||
-                         (get_current() >= '*' && get_current() <= '+') ||
-                         (get_current() >= '-' && get_current() <= '.') ||
-                         (get_current() >= '0' && get_current() <= '9') ||
-                         (get_current() >= 'A' && get_current() <= 'Z') ||
-                         (get_current() >= '^' && get_current() <= 'z') ||
-                         get_current() == '|' || get_current() == '~')) {
+    if (is_eof() ||
+        !(is_equal('!') || in_bounds('#', '\'') || in_bounds('*', '+') ||
+          in_bounds('-', '.') || in_bounds('0', '9') || in_bounds('A', 'Z') ||
+          in_bounds('^', 'z') || is_equal('|') || is_equal('~'))) {
         return false;
     }
     out_char = get_current();
-    this->i++;
+    move_next();
     return true;
 }
 
 bool Parser::get_token(std::string_view &out_token)
 {
-    size_t j = this->i;
+    push_save();
     Char c;
     while (get_token_char(c)) {
     }
-    if (i == j) {
+    if (get_save_length() == 0) {
         return false;
     }
-    out_token = std::string_view(&this->data[j], this->i - j);
+    out_token = get_save_string();
+    pop_save();
     return true;
 }
 
 bool Parser::get_version(Version &out_version)
 {
     Nat8 major = 0, minor = 0;
-    if (!(required_string("HTTP/") && get_digit(major) && required_char('.') &&
+    if (!(require("HTTP/") && get_digit(major) && require('.') &&
           get_digit(minor))) {
         return false;
     }
@@ -59,21 +56,22 @@ bool Parser::get_version(Version &out_version)
 
 bool Parser::get_visible_char(Char &out_char)
 {
-    if (!is_valid() || get_current() < ' ' || get_current() > '~') {
+    if (is_eof() || !in_bounds(' ', '~')) {
         return false;
     }
     out_char = get_current();
-    this->i++;
+    move_next();
     return true;
 }
 
 bool Parser::get_obs_char(Char &out_char)
 {
-    if (!is_valid() || get_current() < 0x80) {
+    if (is_eof() ||
+        !in_bounds(static_cast<Char>(0x80), static_cast<Char>(0xFF))) {
         return false;
     }
     out_char = get_current();
-    this->i++;
+    move_next();
     return true;
 }
 
@@ -87,11 +85,12 @@ bool Parser::get_field_char(Char &out_char)
 
 bool Parser::get_field_value(std::string_view &out_value)
 {
-    size_t j = this->i;
+    push_save();
     Char c;
-    while (get_field_char(c) || required_char(' ') || required_char('\t')) {
+    while (get_field_char(c) || require(' ') || require('\t')) {
     }
-    out_value = std::string_view(&this->data[j], i - j);
+    out_value = get_save_string();
+    pop_save();
     return true;
 }
 
@@ -99,13 +98,20 @@ bool Parser::get_field_line(
     std::string_view &out_name,
     std::string_view &out_value)
 {
-    if (!(get_token(out_name) && required_char(':') && optional_whitespace() &&
-          get_field_value(out_value) && optional_whitespace())) {
+    if (!(get_token(out_name) && require(':') && get_whitespace() &&
+          get_field_value(out_value) && get_whitespace())) {
         return false;
     }
     return true;
 }
 
+bool Parser::valid_version(Version version) const
+{
+    return (version & this->version_mask) == version;
+}
+}  // namespace Web::Http
+
+namespace Web::Http {
 RequestParser::RequestParser(
     const std::string_view &data,
     Version version_mask,
@@ -128,13 +134,13 @@ Status RequestParser::parse(Request &out_request)
         return Status::HttpVersionNotSupported;
     }
 
-    if (!required_string("\r\n")) {
+    if (!require("\r\n")) {
         return Status::BadRequest;
     }
 
     // Fields
     std::string_view name, value;
-    while (get_field_line(name, value) && required_string("\r\n")) {
+    while (get_field_line(name, value) && require("\r\n")) {
         // To lowercase
         std::string name_lower(name.size(), 0);
         std::transform(
@@ -160,7 +166,7 @@ Status RequestParser::parse(Request &out_request)
         return Status::BadRequest;
     }
 
-    if (!required_string("\r\n")) {
+    if (!require("\r\n")) {
         return Status::BadRequest;
     }
     // TODO: parse body
@@ -183,14 +189,16 @@ bool RequestParser::get_method(Method &out_method)
 
 bool RequestParser::get_target(Uri::Uri &out_target)
 {
-    size_t j = this->i;
-    while (i < this->data.size() && this->data[i] != ' ') {
-        i++;
+    push_save();
+    while (!is_eof() && !is_equal(' ')) {
+        move_next();
     }
-    if (i == j) {
+    if (get_save_length() == 0) {
         return false;
     }
-    Uri::Parser uri_parser(std::string_view(&this->data[j], i - j));
+    Uri::Parser uri_parser(get_save_string());
+    pop_save();
+
     if (!uri_parser.parse(out_target)) {
         return false;
     }
@@ -202,9 +210,8 @@ bool RequestParser::get_request_line(
     Uri::Uri &out_target,
     Version &out_version)
 {
-    if (!(get_method(out_method) && required_space() &&
-          get_target(out_target) && required_space() &&
-          get_version(out_version))) {
+    if (!(get_method(out_method) && require(' ') && get_target(out_target) &&
+          require(' ') && get_version(out_version))) {
         return false;
     }
     return true;
@@ -213,10 +220,5 @@ bool RequestParser::get_request_line(
 bool RequestParser::valid_method(Method method) const
 {
     return (method & this->method_mask) == method;
-}
-
-bool RequestParser::valid_version(Version version) const
-{
-    return (version & this->version_mask) == version;
 }
 }  // namespace Web::Http

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "web/enum_bitmask.h"
-#include "web/types.h"
 #include "web/uri/uri.h"
+
+#include <types/types.h>
 
 #include <map>
 #include <optional>

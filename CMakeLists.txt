@@ -2,15 +2,28 @@ cmake_minimum_required(VERSION 3.14)
 
 project(cpp-web)
 
+include(FetchContent)
+
+FetchContent_Declare(
+	cpp-types
+	GIT_REPOSITORY https://github.com/TomBeacock/cpp-types.git
+	GIT_TAG origin/main
+)
+
+FetchContent_Declare(
+	cpp-parser
+	GIT_REPOSITORY https://github.com/TomBeacock/cpp-parser.git
+	GIT_TAG origin/main
+)
+
+FetchContent_MakeAvailable(cpp-types cpp-parser)
+
 add_library(cpp-web STATIC
 	"include/web/base.h"
-	"include/web/types.h"
 	"include/web/log.h"
 	"include/web/assert.h"
 	"include/web/enum_bitmask.h"
 	
-	"include/web/parser.h" "src/parser.cpp"
-
 	"include/web/tcp/tcp_server.h"
 
 	"include/web/uri/uri.h"	"include/web/uri/uri_parser.h" "src/uri/uri_parser.cpp"	"include/web/http/http_server.h" "src/http/http_server.cpp"
@@ -23,6 +36,7 @@ target_include_directories(cpp-web
 	PRIVATE
 		"${PROJECT_SOURCE_DIR}/src"
 )
+target_link_libraries(cpp-web PUBLIC cpp-types cpp-parser)
 
 string(LENGTH "${PROJECT_SOURCE_DIR}/" source_path_length)
 target_compile_definitions(cpp-web PUBLIC SOURCE_PATH_LENGTH=${source_path_length})
