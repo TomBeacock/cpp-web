@@ -1,5 +1,6 @@
 #include "web/http/http_parser.h"
 
+#include "util/util_string.h"
 #include "web/uri/uri_parser.h"
 
 #include <algorithm>
@@ -7,10 +8,7 @@
 #include <format>
 
 namespace Web::Http {
-Parser::Parser(const std::string_view &data, Version version_mask)
-    : Parsing::Parser(data),
-      version_mask(version_mask)
-{}
+Parser::Parser(std::string_view data) : Parsing::Parser(data) {}
 
 bool Parser::get_token_char(Char &out_char)
 {
@@ -25,13 +23,14 @@ bool Parser::get_token_char(Char &out_char)
     return true;
 }
 
-bool Parser::get_token(std::string_view &out_token)
+bool Parser::get_token(std::string &out_token)
 {
     push_save();
     Char c;
     while (get_token_char(c)) {
     }
     if (get_save_length() == 0) {
+        load_save();
         return false;
     }
     out_token = get_save_string();
@@ -39,24 +38,9 @@ bool Parser::get_token(std::string_view &out_token)
     return true;
 }
 
-bool Parser::get_version(Version &out_version)
-{
-    Nat8 major = 0, minor = 0;
-    if (!(require("HTTP/") && get_digit(major) && require('.') &&
-          get_digit(minor))) {
-        return false;
-    }
-    const auto version = to_version(major, minor);
-    if (!version) {
-        return false;
-    }
-    out_version = *version;
-    return true;
-}
-
 bool Parser::get_visible_char(Char &out_char)
 {
-    if (is_eof() || !in_bounds(' ', '~')) {
+    if (is_eof() || !in_bounds('!', '~')) {
         return false;
     }
     out_char = get_current();
@@ -75,7 +59,27 @@ bool Parser::get_obs_char(Char &out_char)
     return true;
 }
 
-bool Parser::get_field_char(Char &out_char)
+MessageParser::MessageParser(std::string_view data, Version version_mask)
+    : Parser(data),
+      version_mask(version_mask)
+{}
+
+bool MessageParser::get_version(Version &out_version)
+{
+    Nat8 major = 0, minor = 0;
+    if (!(require("HTTP/") && get_digit(major) && require('.') &&
+          get_digit(minor))) {
+        return false;
+    }
+    const auto version = to_version(major, minor);
+    if (!version) {
+        return false;
+    }
+    out_version = *version;
+    return true;
+}
+
+bool MessageParser::get_field_char(Char &out_char)
 {
     if (!(get_visible_char(out_char) || get_obs_char(out_char))) {
         return false;
@@ -83,7 +87,7 @@ bool Parser::get_field_char(Char &out_char)
     return true;
 }
 
-bool Parser::get_field_value(std::string_view &out_value)
+bool MessageParser::get_field_value(std::string &out_value)
 {
     push_save();
     Char c;
@@ -94,9 +98,9 @@ bool Parser::get_field_value(std::string_view &out_value)
     return true;
 }
 
-bool Parser::get_field_line(
-    std::string_view &out_name,
-    std::string_view &out_value)
+bool MessageParser::get_field_line(
+    std::string &out_name,
+    std::string &out_value)
 {
     if (!(get_token(out_name) && require(':') && get_whitespace() &&
           get_field_value(out_value) && get_whitespace())) {
@@ -105,7 +109,7 @@ bool Parser::get_field_line(
     return true;
 }
 
-bool Parser::valid_version(Version version) const
+bool MessageParser::valid_version(Version version) const
 {
     return (version & this->version_mask) == version;
 }
@@ -113,10 +117,10 @@ bool Parser::valid_version(Version version) const
 
 namespace Web::Http {
 RequestParser::RequestParser(
-    const std::string_view &data,
+    std::string_view data,
     Version version_mask,
     Method method_mask)
-    : Parser(data, version_mask),
+    : MessageParser(data, version_mask),
       method_mask(method_mask)
 {}
 
@@ -139,14 +143,9 @@ Status RequestParser::parse(Request &out_request)
     }
 
     // Fields
-    std::string_view name, value;
+    std::string name, value;
     while (get_field_line(name, value) && require("\r\n")) {
-        // To lowercase
-        std::string name_lower(name.size(), 0);
-        std::transform(
-            name.begin(), name.end(), name_lower.begin(), [](char c) {
-                return std::tolower(c);
-            });
+        std::string name_lower = Util::to_lower(name);
 
         // Append field if name already exists
         if (auto it = out_request.headers.find(name_lower);
@@ -157,7 +156,7 @@ Status RequestParser::parse(Request &out_request)
             }
             it->second += std::format(", {}", value);
         } else {
-            out_request.headers[name_lower] = std::string(value);
+            out_request.headers[name_lower] = value;
         }
     }
     // HTTP/1.1 requires host field
@@ -175,7 +174,7 @@ Status RequestParser::parse(Request &out_request)
 
 bool RequestParser::get_method(Method &out_method)
 {
-    std::string_view method_token;
+    std::string method_token;
     if (!get_token(method_token)) {
         return false;
     }

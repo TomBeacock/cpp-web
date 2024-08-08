@@ -10,22 +10,25 @@
 namespace Web::Http {
 class Parser : public Parsing::Parser {
   protected:
-    Parser(
-        const std::string_view &data,
-        Version version_mask = bitmask_all<Version>);
+    Parser(const std::string_view data);
 
     bool get_token_char(Char &out_char);
-    bool get_token(std::string_view &out_token);
+    bool get_token(std::string &out_token);
+    bool get_obs_char(Char &out_char);
+    bool get_visible_char(Char &out_char);
+};
+
+class MessageParser : public Parser {
+  protected:
+    MessageParser(
+        std::string_view data,
+        Version version_mask = bitmask_all<Version>);
 
     bool get_version(Version &out_version);
 
-    bool get_visible_char(Char &out_char);
-    bool get_obs_char(Char &out_char);
     bool get_field_char(Char &out_char);
-    bool get_field_value(std::string_view &out_value);
-    bool get_field_line(
-        std::string_view &out_name,
-        std::string_view &out_value);
+    bool get_field_value(std::string &out_value);
+    bool get_field_line(std::string &out_name, std::string &out_value);
 
     bool valid_version(Version version) const;
 
@@ -33,10 +36,10 @@ class Parser : public Parsing::Parser {
     Version version_mask;
 };
 
-class RequestParser : public Parser {
+class RequestParser : public MessageParser {
   public:
     RequestParser(
-        const std::string_view &data,
+        std::string_view data,
         Version version_mask = bitmask_all<Version>,
         Method method_mask = bitmask_all<Method>);
 
