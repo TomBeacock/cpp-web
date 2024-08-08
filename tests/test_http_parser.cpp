@@ -11,8 +11,8 @@ TEST(HttpParser, PlainGet)
     EXPECT_EQ(request_parser.parse(request), Status::Ok);
     EXPECT_EQ(request.method, Method::Get);
     EXPECT_EQ(request.version, Version::Http_1_1);
-    EXPECT_TRUE(request.fields.contains("host"));
-    EXPECT_EQ(request.fields["host"], "127.0.0.1");
+    EXPECT_TRUE(request.headers.contains("host"));
+    EXPECT_EQ(request.headers["host"], "127.0.0.1");
 }
 
 TEST(HttpParser, MethodNotAllowed)

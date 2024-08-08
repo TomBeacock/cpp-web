@@ -149,20 +149,20 @@ Status RequestParser::parse(Request &out_request)
             });
 
         // Append field if name already exists
-        if (auto it = out_request.fields.find(name_lower);
-            it != out_request.fields.end()) {
+        if (auto it = out_request.headers.find(name_lower);
+            it != out_request.headers.end()) {
             // Cannot have multiple host fields
             if (name == "host") {
                 return Status::BadRequest;
             }
             it->second += std::format(", {}", value);
         } else {
-            out_request.fields[name_lower] = std::string(value);
+            out_request.headers[name_lower] = std::string(value);
         }
     }
     // HTTP/1.1 requires host field
     if (is_flag_set(out_request.version, Version::Http_1_1) &&
-        !out_request.fields.contains("host")) {
+        !out_request.headers.contains("host")) {
         return Status::BadRequest;
     }
 

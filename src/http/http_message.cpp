@@ -180,7 +180,7 @@ std::vector<Byte> Response::to_raw() const
         to_reason_phrase(this->status));
 
     // Fields
-    for (const auto &[name, value] : this->fields) {
+    for (const auto &[name, value] : this->headers) {
         ss << std::format("{}: {}\r\n", name, value);
     }
     // Body separator

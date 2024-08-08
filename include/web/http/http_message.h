@@ -102,7 +102,7 @@ std::underlying_type_t<Status> to_code(Status status);
 std::string_view to_reason_phrase(Status status);
 
 struct Message {
-    std::map<std::string, std::string, std::less<>> fields;
+    std::map<std::string, std::string, std::less<>> headers;
     std::vector<Byte> body;
     Version version = Version::Http_1_1;
 
