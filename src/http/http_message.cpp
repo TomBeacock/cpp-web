@@ -57,6 +57,21 @@ std::string_view to_string(Method method)
     return "";
 }
 
+std::string to_list_string(Method method)
+{
+    std::stringstream ss;
+    const char *sep = "";
+    for (size_t i = 1;
+         i < std::numeric_limits<std::underlying_type_t<Method>>::max();
+         i <<= 1) {
+        if (is_flag_set(method, static_cast<Method>(i))) {
+            ss << sep << to_string(method & static_cast<Method>(i));
+            sep = ", ";
+        }
+    }
+    return ss.str();
+}
+
 std::optional<Method> to_method(std::string_view str)
 {
     static const std::map<std::string, Method, std::less<>> method_map = {

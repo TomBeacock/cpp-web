@@ -31,6 +31,7 @@ enum class Method : Nat8 {
 consteval void enable_bitmask_operators(Method);
 
 std::string_view to_string(Method method);
+std::string to_list_string(Method method);
 std::optional<Method> to_method(std::string_view str);
 
 enum class Version : Nat8 {

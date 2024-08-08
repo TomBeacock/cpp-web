@@ -2,12 +2,13 @@
 
 using namespace Web;
 
+constexpr auto allowed_versions =
+    Http::Version::Http_1_0 | Http::Version::Http_1_1;
+constexpr auto allowed_methods =
+    Http::Method::Get | Http::Method::Head | Http::Method::Post;
+
 Server::Server(std::string_view ip_address, Nat16 port)
-    : Http::Server(
-          ip_address,
-          port,
-          {Http::Version::Http_1_0 | Http::Version::Http_1_1,
-           bitmask_all<Http::Method>})
+    : Http::Server(ip_address, port, {allowed_versions, allowed_methods})
 {}
 
 void Server::on_request_received(const Web::Http::Request &request)

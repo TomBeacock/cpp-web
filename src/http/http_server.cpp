@@ -42,7 +42,15 @@ void Server::on_message_received(std::span<Byte> message)
         text_message, config.allowed_versions, config.allowed_methods);
     Status status = parser.parse(request);
     if (status != Status::Ok) {
-        send_response(status);  // Send error status response
+        Response response(Version::Http_1_1, status);
+        switch (status) {
+            case Status::MethodNotAllowed: {
+                response.headers["allow"] =
+                    to_list_string(this->config.allowed_methods);
+                break;
+            }
+        }
+        send_response(response);  // Send error status response
         return;
     }
 
