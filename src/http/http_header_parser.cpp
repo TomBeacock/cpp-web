@@ -11,37 +11,22 @@ bool Http::HeaderParser::parse_accept(AcceptHeader &out_accept)
 {
     push_save();
     Media::Type media_type;
-    Float quality;
+    Float weight;
     while (true) {
-        get_whitespace();
         if (!get_media_type(media_type)) {
             load_save();
             return false;
         }
-        get_whitespace();
-        quality = 0.0f;
-        if (require(';')) {
-            get_whitespace();
-            if (!require('q')) {
-                load_save();
-                return false;
-            }
-            get_whitespace();
-            if (!require('=')) {
-                load_save();
-                return false;
-            }
-            get_whitespace();
-            if (!get_float(quality)) {
-                load_save();
-                return false;
-            }
-            get_whitespace();
+        weight = 0.0f;
+        if (get_weight(weight)) {
         }
-        out_accept.types.push_back({media_type, quality});
-        if (!require(',')) {
+        out_accept.types.push_back({media_type, weight});
+        push_save();
+        if (!(get_whitespace() && require(',') && get_whitespace())) {
+            load_save();
             break;
         }
+        pop_save();
     }
     pop_save();
     return true;
@@ -70,18 +55,62 @@ bool Http::HeaderParser::parse_content_type(ContentTypeHeader &out_content_type)
     return true;
 }
 
+bool Http::HeaderParser::get_q_value(Float &out_value)
+{
+    push_save();
+    if (require("0")) {
+        out_value = 0.0f;
+        if (require(".")) {
+            Int fraction = 0;
+            Float div = 1.0f;
+            Nat8 digit;
+            for (int i = 0; i < 3 && get_digit(digit); i++) {
+                fraction = (fraction * 10) + digit;
+                div /= 10.0f;
+            }
+            out_value += static_cast<Float>(fraction) * div;
+        }
+        pop_save();
+        return true;
+    }
+    if (require("1")) {
+        out_value = 1.0f;
+        if (require(".")) {
+            Nat8 digit;
+            for (int i = 0; i < 3; i++) {
+                push_save();
+                if (!get_digit(digit) || digit != 0) {
+                    load_save();
+                    break;
+                }
+                pop_save();
+            }
+        }
+        pop_save();
+        return true;
+    }
+    load_save();
+    return false;
+}
+
+bool Http::HeaderParser::get_weight(Float &out_weight)
+{
+    push_save();
+    ;
+    if (!(get_whitespace() && require(';') && get_whitespace() &&
+          require("q=") && get_q_value(out_weight))) {
+        load_save();
+        return false;
+    }
+    pop_save();
+    return true;
+}
+
 bool Http::HeaderParser::get_media_type(Media::Type &out_type)
 {
     push_save();
-    if (!get_token(out_type.type)) {
-        load_save();
-        return false;
-    }
-    if (!require('/')) {
-        load_save();
-        return false;
-    }
-    if (!get_token(out_type.subtype)) {
+    if (!(get_token(out_type.type) && require('/') &&
+          get_token(out_type.subtype))) {
         load_save();
         return false;
     }
