@@ -6,9 +6,10 @@ namespace Util {
 std::string to_lower(const std::string &str)
 {
     std::string out(str.size(), 0);
-    std::transform(str.begin(), str.end(), str.begin(), [](char c) -> char {
+    std::transform(str.begin(), str.end(), out.begin(), [](char c) -> char {
         return std::tolower(c);
     });
+    return out;
 }
 
 void make_lower(std::string &str)
