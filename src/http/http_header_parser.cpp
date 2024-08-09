@@ -109,13 +109,21 @@ bool Http::HeaderParser::get_weight(Float &out_weight)
 bool Http::HeaderParser::get_media_type(Media::Type &out_type)
 {
     push_save();
-    if (!(get_token(out_type.type) && require('/') &&
-          get_token(out_type.subtype))) {
+    std::string_view type, subtype;
+    if (!(get_token(type) && require('/') && get_token(subtype))) {
         load_save();
         return false;
     }
-    Util::make_lower(out_type.type);
-    Util::make_lower(out_type.subtype);
+
+    std::string lower_type = Util::to_lower(std::string(type));
+    std::string lower_subtype = Util::to_lower(std::string(subtype));
+    auto opt_type =
+        Media::to_type(std::format("{}/{}", lower_type, lower_subtype));
+    if (!opt_type) {
+        load_save();
+        return false;
+    }
+    out_type = *opt_type;
     pop_save();
     return true;
 }
@@ -179,7 +187,8 @@ bool Http::HeaderParser::get_quoted_string(std::string &out_str)
 bool HeaderParser::get_parameter(std::string &out_key, std::string &out_value)
 {
     push_save();
-    if (!get_token(out_key)) {
+    std::string_view key_token, value_token;
+    if (!get_token(key_token)) {
         load_save();
         return false;
     }
@@ -187,11 +196,15 @@ bool HeaderParser::get_parameter(std::string &out_key, std::string &out_value)
         load_save();
         return false;
     }
-    if (!(get_token(out_value) || get_quoted_string(out_value))) {
+
+    if (get_token(value_token)) {
+        out_value = std::string(value_token);
+    } else if (get_quoted_string(out_value)) {
+    } else {
         load_save();
         return false;
     }
-    Util::make_lower(out_key);
+    out_key = Util::to_lower(std::string(key_token));
     pop_save();
     return true;
 }

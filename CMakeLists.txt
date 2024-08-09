@@ -26,7 +26,7 @@ add_library(cpp-web STATIC
 	
 	"include/web/tcp/tcp_server.h"
 
-	"include/web/media/media_type.h"
+	"include/web/media/media_type.h" "src/media/media_type.cpp"
 
 	"include/web/uri/uri.h"	"include/web/uri/uri_parser.h" "src/uri/uri_parser.cpp"	"include/web/http/http_server.h" "src/http/http_server.cpp"
 	"include/web/http/http_message.h" "src/http/http_message.cpp"	"include/web/http/http_parser.h" "src/http/http_parser.cpp"	"include/web/http/http_header.h"	"include/web/http/http_header_parser.h" "src/http/http_header_parser.cpp"	"src/util/util_string.h" "src/util/util_string.cpp")

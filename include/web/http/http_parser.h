@@ -13,7 +13,7 @@ class Parser : public Parsing::Parser {
     Parser(const std::string_view data);
 
     bool get_token_char(Char &out_char);
-    bool get_token(std::string &out_token);
+    bool get_token(std::string_view &out_token);
     bool get_obs_char(Char &out_char);
     bool get_visible_char(Char &out_char);
 };
@@ -27,8 +27,10 @@ class MessageParser : public Parser {
     bool get_version(Version &out_version);
 
     bool get_field_char(Char &out_char);
-    bool get_field_value(std::string &out_value);
-    bool get_field_line(std::string &out_name, std::string &out_value);
+    bool get_field_value(std::string_view &out_value);
+    bool get_field_line(
+        std::string_view &out_name,
+        std::string_view &out_value);
 
     bool valid_version(Version version) const;
 

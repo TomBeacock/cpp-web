@@ -23,7 +23,7 @@ bool Parser::get_token_char(Char &out_char)
     return true;
 }
 
-bool Parser::get_token(std::string &out_token)
+bool Parser::get_token(std::string_view &out_token)
 {
     push_save();
     Char c;
@@ -87,7 +87,7 @@ bool MessageParser::get_field_char(Char &out_char)
     return true;
 }
 
-bool MessageParser::get_field_value(std::string &out_value)
+bool MessageParser::get_field_value(std::string_view &out_value)
 {
     push_save();
     Char c;
@@ -99,8 +99,8 @@ bool MessageParser::get_field_value(std::string &out_value)
 }
 
 bool MessageParser::get_field_line(
-    std::string &out_name,
-    std::string &out_value)
+    std::string_view &out_name,
+    std::string_view &out_value)
 {
     if (!(get_token(out_name) && require(':') && get_whitespace() &&
           get_field_value(out_value) && get_whitespace())) {
@@ -143,9 +143,9 @@ Status RequestParser::parse(Request &out_request)
     }
 
     // Fields
-    std::string name, value;
+    std::string_view name, value;
     while (get_field_line(name, value) && require("\r\n")) {
-        std::string name_lower = Util::to_lower(name);
+        std::string name_lower = Util::to_lower(std::string(name));
 
         // Append field if name already exists
         if (auto it = out_request.headers.find(name_lower);
@@ -174,7 +174,7 @@ Status RequestParser::parse(Request &out_request)
 
 bool RequestParser::get_method(Method &out_method)
 {
-    std::string method_token;
+    std::string_view method_token;
     if (!get_token(method_token)) {
         return false;
     }
