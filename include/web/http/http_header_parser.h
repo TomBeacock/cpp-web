@@ -1,31 +1,12 @@
 #pragma once
 
+#include "http_header.h"
 #include "web/http/http_parser.h"
 #include "web/media/media_type.h"
 
-#include <map>
 #include <string>
-#include <vector>
 
 namespace Web::Http {
-struct AcceptHeader {
-    struct Type {
-        Media::Type type;
-        Float weight;
-    };
-    std::vector<Type> types;
-};
-
-struct ContentLengthHeader {
-    Nat length;
-};
-
-struct ContentTypeHeader {
-    Media::Type type;
-    std::string charset;
-    std::string boundary;
-};
-
 class HeaderParser : public Parser {
   public:
     HeaderParser(std::string_view data);
