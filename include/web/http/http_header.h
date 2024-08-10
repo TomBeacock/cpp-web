@@ -11,7 +11,7 @@ namespace Web::Http {
 struct AcceptHeader {
     struct Type {
         Media::Type type;
-        Float weight;
+        Nat16 weight;
     };
     std::vector<Type> types;
 };

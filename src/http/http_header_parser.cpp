@@ -11,13 +11,13 @@ bool Http::HeaderParser::parse_accept(AcceptHeader &out_accept)
 {
     push_save();
     Media::Type media_type;
-    Float weight;
+    Nat16 weight;
     while (true) {
         if (!get_media_type(media_type)) {
             load_save();
             return false;
         }
-        weight = 0.0f;
+        weight = 1000;
         if (get_weight(weight)) {
         }
         out_accept.types.push_back({media_type, weight});
@@ -55,26 +55,26 @@ bool Http::HeaderParser::parse_content_type(ContentTypeHeader &out_content_type)
     return true;
 }
 
-bool Http::HeaderParser::get_q_value(Float &out_value)
+bool Http::HeaderParser::get_q_value(Nat16 &out_value)
 {
     push_save();
     if (require("0")) {
-        out_value = 0.0f;
+        out_value = 0;
         if (require(".")) {
-            Int fraction = 0;
-            Float div = 1.0f;
             Nat8 digit;
-            for (int i = 0; i < 3 && get_digit(digit); i++) {
-                fraction = (fraction * 10) + digit;
-                div /= 10.0f;
+            int i = 0;
+            for (; i < 3 && get_digit(digit); i++) {
+                out_value = out_value * 10 + digit;
             }
-            out_value += static_cast<Float>(fraction) * div;
+            for (; i < 3; i++) {
+                out_value *= 10;
+            }
         }
         pop_save();
         return true;
     }
     if (require("1")) {
-        out_value = 1.0f;
+        out_value = 1000;
         if (require(".")) {
             Nat8 digit;
             for (int i = 0; i < 3; i++) {
@@ -93,7 +93,7 @@ bool Http::HeaderParser::get_q_value(Float &out_value)
     return false;
 }
 
-bool Http::HeaderParser::get_weight(Float &out_weight)
+bool Http::HeaderParser::get_weight(Nat16 &out_weight)
 {
     push_save();
     ;
