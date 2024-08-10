@@ -6269,4 +6269,64 @@ std::optional<Type> to_type(std::string_view str)
     }
     return std::nullopt;
 }
+
+bool is_application(Type type)
+{
+    return type == Type::Any ||
+           (type >= Type::Application_Any && type <= Type::Application_Zstd);
+}
+
+bool is_audio(Type type)
+{
+    return type == Type::Any ||
+           (type >= Type::Audio_Any && type <= Type::Audio_VorbisConfig);
+}
+
+bool is_font(Type type)
+{
+    return type == Type::Any ||
+           (type >= Type::Font_Any && type <= Type::Font_Woff2);
+}
+
+bool is_haptics(Type type)
+{
+    return type == Type::Any ||
+           (type >= Type::Haptics_Any && type <= Type::Haptics_Hmpg);
+}
+
+bool is_image(Type type)
+{
+    return type == Type::Any ||
+           (type >= Type::Image_Any && type <= Type::Image_XWmf);
+}
+
+bool is_message(Type type)
+{
+    return type == Type::Any ||
+           (type >= Type::Message_Any && type <= Type::Message_VndWfaWsc);
+}
+
+bool is_model(Type type)
+{
+    return type == Type::Any ||
+           (type >= Type::Model_Any && type <= Type::Model_X3dXml);
+}
+
+bool is_multipart(Type type)
+{
+    return type == Type::Any || (type >= Type::Multipart_Any &&
+                                 type <= Type::Multipart_XMixedReplace);
+}
+
+bool is_text(Type type)
+{
+    return type == Type::Any || (type >= Type::Text_Any &&
+                                 type <= Type::Text_XmlExternalParsedEntity);
+}
+
+bool is_video(Type type)
+{
+    return type == Type::Any ||
+           (type >= Type::Video_Any && type <= Type::Video_VP9);
+}
 }  // namespace Web::Media
