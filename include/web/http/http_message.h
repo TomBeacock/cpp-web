@@ -31,7 +31,7 @@ struct Request : public Message {
     Request(Method method, Uri::Uri target, Version version);
 
     template <typename T>
-    std::optional<T> get_header();
+    std::optional<T> get_header() const;
 };
 
 struct Response : public Message {
@@ -44,7 +44,7 @@ struct Response : public Message {
 };
 
 template <typename T>
-inline std::optional<T> Request::get_header()
+inline std::optional<T> Request::get_header() const
 {
     if (auto it = this->headers.find(T::label); it != this->headers.end()) {
         HeaderParser parser(it->second);
