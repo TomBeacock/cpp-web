@@ -1,6 +1,7 @@
 #include "web/http/http_parser.h"
 
 #include "util/util_string.h"
+#include "web/http/http_message.h"
 #include "web/uri/uri_parser.h"
 
 #include <algorithm>

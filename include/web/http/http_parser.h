@@ -1,11 +1,17 @@
 #pragma once
 
+#include "http_types.h"
 #include "web/enum_bitmask.h"
-#include "web/http/http_message.h"
+#include "web/uri/uri.h"
 
 #include <parser/parser.h>
 
 #include <string>
+
+namespace Web::Http {
+struct Request;
+struct Response;
+}  // namespace Web::Http
 
 namespace Web::Http {
 class Parser : public Parsing::Parser {

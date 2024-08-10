@@ -7,7 +7,8 @@
 namespace Web::Http {
 Http::HeaderParser::HeaderParser(std::string_view data) : Parser(data) {}
 
-bool Http::HeaderParser::parse_accept(AcceptHeader &out_accept)
+template <>
+bool Http::HeaderParser::parse<AcceptHeader>(AcceptHeader &out_accept)
 {
     push_save();
     Media::Type media_type;
@@ -32,13 +33,16 @@ bool Http::HeaderParser::parse_accept(AcceptHeader &out_accept)
     return true;
 }
 
-bool Http::HeaderParser::parse_content_length(
+template <>
+bool Http::HeaderParser::parse<ContentLengthHeader>(
     ContentLengthHeader &out_content_length)
 {
     return get_nat(out_content_length.length);
 }
 
-bool Http::HeaderParser::parse_content_type(ContentTypeHeader &out_content_type)
+template <>
+bool Http::HeaderParser::parse<ContentTypeHeader>(
+    ContentTypeHeader &out_content_type)
 {
     if (!get_media_type(out_content_type.type)) {
         return false;
