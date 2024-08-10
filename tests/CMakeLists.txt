@@ -19,6 +19,7 @@ add_executable(tests
 	"test_uri_parser.cpp"
 	"test_http_parser.cpp"
 	"test_http_header_parser.cpp"
+	"test_http_message.cpp"
 )
 target_link_libraries(tests PRIVATE cpp-web GTest::gtest_main)
 set_target_properties(tests PROPERTIES CXX_STANDARD 23 CXX_STANDARD_REQUIRED ON)

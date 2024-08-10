@@ -1,5 +1,6 @@
 #pragma once
 
+#include "http_header_parser.h"
 #include "http_types.h"
 #include "web/enum_bitmask.h"
 #include "web/uri/uri.h"
@@ -28,6 +29,9 @@ struct Request : public Message {
 
     Request() = default;
     Request(Method method, Uri::Uri target, Version version);
+
+    template <typename T>
+    std::optional<T> get_header();
 };
 
 struct Response : public Message {
@@ -38,4 +42,17 @@ struct Response : public Message {
 
     std::vector<Byte> to_raw() const;
 };
+
+template <typename T>
+inline std::optional<T> Request::get_header()
+{
+    if (auto it = this->headers.find(T::label); it != this->headers.end()) {
+        HeaderParser parser(it->second);
+        T header{};
+        if (parser.parse<T>(header)) {
+            return header;
+        }
+    }
+    return std::nullopt;
+}
 }  // namespace Web::Http

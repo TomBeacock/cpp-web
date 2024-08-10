@@ -8,7 +8,7 @@ TEST(UriParser, PathAbsolute)
 {
     Uri uri;
     Parser uri_parser("/test/document");
-    EXPECT_TRUE(uri_parser.parse(uri));
+    ASSERT_TRUE(uri_parser.parse(uri));
     EXPECT_EQ(static_cast<const std::string &>(uri), "/test/document");
     EXPECT_EQ(uri.get_path(), "/test/document");
     EXPECT_EQ(uri.get_query(), "");
@@ -19,7 +19,7 @@ TEST(UriParser, PathAbsoluteWithQuery)
 {
     Uri uri;
     Parser uri_parser("/test/document?hello-world");
-    EXPECT_TRUE(uri_parser.parse(uri));
+    ASSERT_TRUE(uri_parser.parse(uri));
     EXPECT_EQ(
         static_cast<const std::string &>(uri), "/test/document?hello-world");
     EXPECT_EQ(uri.get_path(), "/test/document");
@@ -31,7 +31,7 @@ TEST(UriParser, PathAbsoluteWithFragment)
 {
     Uri uri;
     Parser uri_parser("/test/document?hello#world");
-    EXPECT_TRUE(uri_parser.parse(uri));
+    ASSERT_TRUE(uri_parser.parse(uri));
     EXPECT_EQ(
         static_cast<const std::string &>(uri), "/test/document?hello#world");
     EXPECT_EQ(uri.get_path(), "/test/document");
@@ -43,5 +43,5 @@ TEST(UriParser, InvalidPath)
 {
     Uri uri;
     Parser uri_parser("test path");
-    EXPECT_FALSE(uri_parser.parse(uri));
+    ASSERT_FALSE(uri_parser.parse(uri));
 }
