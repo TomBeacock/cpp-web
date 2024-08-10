@@ -17,8 +17,8 @@ class Parser : public Parsing::Parser {
   private:
     bool get_percent_char(Char &out_char);
     bool get_path_char(Char &out_char);
-    bool get_segment(std::string_view &out_segment, bool non_zero = false);
-    bool get_path_absolute(std::vector<std::string> &out_segments);
+    bool get_segment(std::string &out_segment, bool non_zero = false);
+    bool get_path_absolute(std::string &out_path);
     bool get_query(std::string_view &out_query);
     bool get_fragment(std::string_view &out_fragment);
 };

@@ -1,22 +1,55 @@
 #include "web/uri/uri_parser.h"
 
+#include <format>
+#include <sstream>
+
 namespace Web::Uri {
 Parser::Parser(std::string_view data) : Parsing::Parser(data) {}
 bool Parser::parse(Uri &out_uri)
 {
-    out_uri.segments.clear();
-    if (is_eof() || !get_path_absolute(out_uri.segments)) {
+    std::string path;
+    if (is_eof() || !get_path_absolute(path)) {
         return false;
     }
-    std::string_view str_view;
-    if (get_query(str_view)) {
-        out_uri.query = std::string(str_view);
+    if (is_eof()) {
+        out_uri.uri = path;
+        out_uri.path = {out_uri.uri.begin(), out_uri.uri.begin() + path.size()};
+        return true;
     }
-    if (get_fragment(str_view)) {
-        out_uri.fragment = std::string(str_view);
+
+    std::string_view query;
+    if (!get_query(query)) {
+        return false;
     }
-    return true;
-}
+    if (is_eof()) {
+        out_uri.uri = out_uri.uri = std::format("{}?{}", path, query);
+        out_uri.path = {out_uri.uri.begin(), out_uri.uri.begin() + path.size()};
+        out_uri.query = {
+            out_uri.uri.begin() + path.size() + 1,
+            out_uri.uri.begin() + path.size() + query.size() + 1,
+        };
+        return true;
+    }
+
+    std::string_view fragment;
+    if (!get_fragment(fragment)) {
+        return false;
+    }
+    if (is_eof()) {
+        out_uri.uri = std::format("{}?{}#{}", path, query, fragment);
+        out_uri.path = {out_uri.uri.begin(), out_uri.uri.begin() + path.size()};
+        out_uri.query = {
+            out_uri.uri.begin() + path.size() + 1,
+            out_uri.uri.begin() + path.size() + query.size() + 1,
+        };
+        out_uri.fragment = {
+            out_uri.uri.begin() + path.size() + query.size() + 2,
+            out_uri.uri.end(),
+        };
+        return true;
+    }
+    return false;
+}  // namespace Web::Uri
 
 bool Parser::get_percent_char(Char &out_char)
 {
@@ -53,34 +86,40 @@ bool Parser::get_path_char(Char &out_char)
     return false;
 }
 
-bool Parser::get_segment(std::string_view &out_segment, bool non_zero)
+bool Parser::get_segment(std::string &out_segment, bool non_zero)
 {
     push_save();
+    std::stringstream segment;
     Char c;
     while (get_path_char(c)) {
+        segment << c;
     }
     if (non_zero && get_save_length() == 0) {
+        pop_save();
         return false;
     }
-    out_segment = get_save_string();
+    out_segment = std::move(segment).str();
     pop_save();
     return true;
 }
 
-bool Parser::get_path_absolute(std::vector<std::string> &out_segments)
+bool Parser::get_path_absolute(std::string &out_path)
 {
     if (is_eof() || !require('/')) {
         return false;
     }
-    std::string_view segment;
+    std::stringstream path;
+    path << '/';
+    std::string segment;
     if (!get_segment(segment, true)) {
-        out_segments.push_back("");
+        out_path = std::move(path).str();
         return true;
     }
-    out_segments.push_back(std::string(segment));
+    path << segment;
     while (require('/') && get_segment(segment)) {
-        out_segments.push_back(std::string(segment));
+        path << '/' << segment;
     }
+    out_path = std::move(path).str();
     return true;
 }
 
