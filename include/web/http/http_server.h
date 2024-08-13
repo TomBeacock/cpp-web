@@ -28,7 +28,7 @@ class Server : public Tcp::Server {
 
   protected:
     virtual void on_message_received(std::span<Byte> message) final;
-    virtual void on_request_received(const Request &request){};
+    virtual void on_request_received(Request &request){};
 
   private:
     Config config;
