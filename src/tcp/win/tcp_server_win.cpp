@@ -53,7 +53,7 @@ void Server::start()
         exit_with_error("Socket listen failed");
     }
     LOG_INFO(
-        "Listening on ADDRESS: {} PORT: {}",
+        "Listening on {}:{}",
         inet_ntoa(reinterpret_cast<in_addr &>(this->service.sin_addr)),
         ntohs(this->service.sin_port));
 
