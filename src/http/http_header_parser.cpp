@@ -5,61 +5,21 @@
 #include <sstream>
 
 namespace Web::Http {
-Http::HeaderParser::HeaderParser(std::string_view data) : Parser(data) {}
+HeaderParser::HeaderParser(std::string_view data) : Parser(data) {}
 
-template <>
-bool Http::HeaderParser::parse<AcceptHeader>(AcceptHeader &out_accept)
+std::unique_ptr<Header> Http::HeaderParser::parse(Header::Type type)
 {
-    push_save();
-    Media::Type media_type;
-    Nat16 weight;
-    while (true) {
-        if (!get_media_type(media_type)) {
-            load_save();
-            return false;
-        }
-        weight = 1000;
-        if (get_weight(weight)) {
-        }
-        out_accept.types.push_back({media_type, weight});
-        push_save();
-        if (!(get_whitespace() && require(',') && get_whitespace())) {
-            load_save();
-            break;
-        }
-        pop_save();
+    switch (type) {
+        case Header::Type::Accept: return parse_header<Accept>();
+        case Header::Type::Allow: return parse_header<Allow>();
+        case Header::Type::ContentLength: return parse_header<ContentLength>();
+        case Header::Type::ContentType: return parse_header<ContentType>();
+        case Header::Type::Host: return parse_header<Host>();
     }
-    pop_save();
-    return true;
+    return nullptr;
 }
 
-template <>
-bool Http::HeaderParser::parse<ContentLengthHeader>(
-    ContentLengthHeader &out_content_length)
-{
-    return get_nat(out_content_length.length);
-}
-
-template <>
-bool Http::HeaderParser::parse<ContentTypeHeader>(
-    ContentTypeHeader &out_content_type)
-{
-    if (!get_media_type(out_content_type.type)) {
-        return false;
-    }
-    std::map<std::string, std::string> params;
-    if (get_parameters(params)) {
-        if (auto it = params.find("charset"); it != params.end()) {
-            out_content_type.charset = it->second;
-        }
-        if (auto it = params.find("boundary"); it != params.end()) {
-            out_content_type.boundary = it->second;
-        }
-    }
-    return true;
-}
-
-bool Http::HeaderParser::get_q_value(Nat16 &out_value)
+bool HeaderParser::get_q_value(Nat16 &out_value)
 {
     push_save();
     if (require("0")) {
@@ -97,7 +57,7 @@ bool Http::HeaderParser::get_q_value(Nat16 &out_value)
     return false;
 }
 
-bool Http::HeaderParser::get_weight(Nat16 &out_weight)
+bool HeaderParser::get_weight(Nat16 &out_weight)
 {
     push_save();
     ;
@@ -110,7 +70,7 @@ bool Http::HeaderParser::get_weight(Nat16 &out_weight)
     return true;
 }
 
-bool Http::HeaderParser::get_media_type(Media::Type &out_type)
+bool HeaderParser::get_media_type(Media::Type &out_type)
 {
     push_save();
     std::string_view type, subtype;
@@ -132,7 +92,7 @@ bool Http::HeaderParser::get_media_type(Media::Type &out_type)
     return true;
 }
 
-bool Http::HeaderParser::get_quoted_char(Char &out_char)
+bool HeaderParser::get_quoted_char(Char &out_char)
 {
     if (get_obs_char(out_char)) {
         return true;
@@ -147,7 +107,7 @@ bool Http::HeaderParser::get_quoted_char(Char &out_char)
     return true;
 }
 
-bool Http::HeaderParser::get_quoted_pair(Char &out_char)
+bool HeaderParser::get_quoted_pair(Char &out_char)
 {
     push_save();
     if (!require('\\')) {
@@ -167,7 +127,7 @@ bool Http::HeaderParser::get_quoted_pair(Char &out_char)
     return true;
 }
 
-bool Http::HeaderParser::get_quoted_string(std::string &out_str)
+bool HeaderParser::get_quoted_string(std::string &out_str)
 {
     push_save();
     if (!require('\"')) {
@@ -213,7 +173,7 @@ bool HeaderParser::get_parameter(std::string &out_key, std::string &out_value)
     return true;
 }
 
-bool Http::HeaderParser::get_parameters(
+bool HeaderParser::get_parameters(
     std::map<std::string, std::string> &parameters)
 {
     push_save();
@@ -231,6 +191,68 @@ bool Http::HeaderParser::get_parameters(
             parameters.insert({key, value});
         }
     }
+    pop_save();
+    return true;
+}
+
+template <>
+bool HeaderParser::get_header<Accept>(Accept &out_accept)
+{
+    push_save();
+    Media::Type media_type;
+    Nat16 weight;
+    while (true) {
+        if (!get_media_type(media_type)) {
+            load_save();
+            return false;
+        }
+        weight = 1000;
+        if (get_weight(weight)) {
+        }
+        out_accept.types.push_back({media_type, weight});
+        push_save();
+        if (!(get_whitespace() && require(',') && get_whitespace())) {
+            load_save();
+            break;
+        }
+        pop_save();
+    }
+    pop_save();
+    return true;
+}
+
+template <>
+bool HeaderParser::get_header<ContentLength>(ContentLength &out_content_length)
+{
+    return get_nat(out_content_length.length);
+}
+
+template <>
+bool HeaderParser::get_header<ContentType>(ContentType &out_content_type)
+{
+    if (!get_media_type(out_content_type.media_type)) {
+        return false;
+    }
+    std::map<std::string, std::string> params;
+    if (get_parameters(params)) {
+        if (auto it = params.find("charset"); it != params.end()) {
+            out_content_type.charset = it->second;
+        }
+        if (auto it = params.find("boundary"); it != params.end()) {
+            out_content_type.boundary = it->second;
+        }
+    }
+    return true;
+}
+
+template <>
+bool HeaderParser::get_header<Host>(Host &out_host)
+{
+    push_save();
+    while (!is_eof()) {
+        move_next();
+    }
+    out_host.host = get_save_string();
     pop_save();
     return true;
 }

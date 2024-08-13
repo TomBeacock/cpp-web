@@ -8,15 +8,21 @@
 #include <types/types.h>
 
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace Web::Http {
 struct Message {
-    std::map<std::string, std::string, std::less<>> headers;
+    std::map<Header::Type, std::unique_ptr<Header>> headers;
     std::vector<Byte> body;
     Version version = Version::Http_1_1;
+
+    template <typename T>
+    T *const get_header() const;
+    template <typename T>
+    T &get_or_create_header();
 
   protected:
     Message() = default;
@@ -29,9 +35,6 @@ struct Request : public Message {
 
     Request() = default;
     Request(Method method, Uri::Uri target, Version version);
-
-    template <typename T>
-    std::optional<T> get_header() const;
 };
 
 struct Response : public Message {
@@ -40,19 +43,33 @@ struct Response : public Message {
     Response() = default;
     Response(Version version, Status status);
 
-    std::vector<Byte> to_raw() const;
+    std::vector<Byte> to_bytes() const;
 };
 
 template <typename T>
-inline std::optional<T> Request::get_header() const
+inline T *const Message::get_header() const
 {
-    if (auto it = this->headers.find(T::label); it != this->headers.end()) {
-        HeaderParser parser(it->second);
-        T header{};
-        if (parser.parse<T>(header)) {
+    static_assert(std::derived_from<T, Header>);
+    if (auto it = this->headers.find(T::header_type);
+        it != this->headers.end()) {
+        if (T *const header = dynamic_cast<T *const>(it->second.get());
+            header != nullptr) {
             return header;
         }
     }
-    return std::nullopt;
+    return nullptr;
+}
+
+template <typename T>
+inline T &Message::get_or_create_header()
+{
+    static_assert(std::derived_from<T, Header>);
+    if (auto it = this->headers.find(T::header_type);
+        it != this->headers.end()) {
+        return dynamic_cast<T &>(*it->second);
+    }
+    auto it =
+        this->headers.emplace(T::header_type, std::make_unique<T>()).first;
+    return dynamic_cast<T &>(*it->second);
 }
 }  // namespace Web::Http

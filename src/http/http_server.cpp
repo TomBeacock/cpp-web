@@ -22,7 +22,7 @@ void Server::start()
 
 void Server::send_response(Response &response) const
 {
-    std::vector<Byte> raw_response = response.to_raw();
+    std::vector<Byte> raw_response = response.to_bytes();
     send_message(raw_response);
 }
 
@@ -45,8 +45,8 @@ void Server::on_message_received(std::span<Byte> message)
         Response response(Version::Http_1_1, status);
         switch (status) {
             case Status::MethodNotAllowed: {
-                response.headers["allow"] =
-                    to_list_string(this->config.allowed_methods);
+                Allow &allow = response.get_or_create_header<Allow>();
+                allow.methods = this->config.allowed_methods;
                 break;
             }
         }

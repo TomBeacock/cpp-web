@@ -6,7 +6,7 @@
 namespace Web::Http {
 Message::Message(Version version) : version(version) {}
 
-std::vector<Byte> Response::to_raw() const
+std::vector<Byte> Response::to_bytes() const
 {
     std::stringstream ss;
     // Response line
@@ -18,19 +18,19 @@ std::vector<Byte> Response::to_raw() const
 
     // Fields
     for (const auto &[name, value] : this->headers) {
-        ss << std::format("{}: {}\r\n", name, value);
+        ss << std::format("{}: {}\r\n", to_string(name), value->to_string());
     }
     // Body separator
     ss << "\r\n";
 
     // To bytes
     std::string header = ss.str();
-    std::vector<Byte> raw(header.begin(), header.end());
+    std::vector<Byte> bytes(header.begin(), header.end());
 
     // Body
-    raw.insert(raw.end(), this->body.begin(), this->body.end());
+    bytes.insert(bytes.end(), this->body.begin(), this->body.end());
 
-    return raw;
+    return bytes;
 }
 
 Request::Request(Method method, Uri::Uri target, Version version)

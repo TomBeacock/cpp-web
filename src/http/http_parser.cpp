@@ -143,26 +143,39 @@ Status RequestParser::parse(Request &out_request)
         return Status::BadRequest;
     }
 
-    // Fields
+    // Extract header key-value pairs
     std::string_view name, value;
+    std::map<std::string, std::string> headers;
     while (get_field_line(name, value) && require("\r\n")) {
         std::string name_lower = Util::to_lower(std::string(name));
 
         // Append field if name already exists
-        if (auto it = out_request.headers.find(name_lower);
-            it != out_request.headers.end()) {
+        if (auto it = headers.find(name_lower); it != headers.end()) {
             // Cannot have multiple host fields
             if (name == "host") {
                 return Status::BadRequest;
             }
             it->second += std::format(", {}", value);
         } else {
-            out_request.headers[name_lower] = value;
+            headers[name_lower] = value;
         }
     }
+
+    // Parse individual headers
+    for (const auto &[header_name, header_value] : headers) {
+        auto header_type = to_header_type(header_name);
+        if (header_type) {
+            HeaderParser parser(header_value);
+            std::unique_ptr<Header> header = parser.parse(*header_type);
+            if (header) {
+                out_request.headers[*header_type] = std::move(header);
+            }
+        }
+    }
+
     // HTTP/1.1 requires host field
     if (is_flag_set(out_request.version, Version::Http_1_1) &&
-        !out_request.headers.contains("host")) {
+        !out_request.headers.contains(Header::Type::Host)) {
         return Status::BadRequest;
     }
 

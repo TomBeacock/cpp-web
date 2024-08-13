@@ -12,8 +12,9 @@ TEST(HttpParser, PlainGet)
     ASSERT_EQ(request_parser.parse(request), Status::Ok);
     EXPECT_EQ(request.method, Method::Get);
     EXPECT_EQ(request.version, Version::Http_1_1);
-    EXPECT_TRUE(request.headers.contains("host"));
-    EXPECT_EQ(request.headers["host"], "127.0.0.1");
+    Host *const host = request.get_header<Host>();
+    ASSERT_NE(host, nullptr);
+    EXPECT_EQ(host->host, "127.0.0.1");
 }
 
 TEST(HttpParser, MethodNotAllowed)

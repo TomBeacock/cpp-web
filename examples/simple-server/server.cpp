@@ -18,8 +18,12 @@ void Server::on_request_received(const Web::Http::Request &request)
         "src=\"test.jpeg\"></img></body></html>";
 
     Http::Response response(Http::Version::Http_1_1, Http::Status::Ok);
-    response.headers["Content-Type"] = "text/html";
-    response.headers["Content-Length"] = std::to_string(content.size());
+    Http::ContentType &content_type =
+        response.get_or_create_header<Http::ContentType>();
+    content_type.media_type = Media::Type::Text_Html;
+    Http::ContentLength &content_length =
+        response.get_or_create_header<Http::ContentLength>();
+    content_length.length = static_cast<Nat>(content.size());
     response.body = std::vector<Byte>(content.begin(), content.end());
     send_response(response);
 }
