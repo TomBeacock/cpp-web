@@ -182,7 +182,18 @@ Status RequestParser::parse(Request &out_request)
     if (!require("\r\n")) {
         return Status::BadRequest;
     }
-    // TODO: parse body
+
+    ContentLength *const content_length =
+        out_request.get_header<ContentLength>();
+    if (content_length != nullptr) {
+        if (get_remaining() <= content_length->length) {
+            push_save();
+            move_forward(content_length->length);
+            std::string_view body = get_save_string();
+            out_request.body = std::vector<Byte>(body.begin(), body.end());
+            pop_save();
+        }
+    }
     return Status::Ok;
 }
 
