@@ -186,7 +186,7 @@ Status RequestParser::parse(Request &out_request)
     ContentLength *const content_length =
         out_request.get_header<ContentLength>();
     if (content_length != nullptr) {
-        if (get_remaining() <= content_length->length) {
+        if (get_remaining() >= content_length->length) {
             push_save();
             move_forward(content_length->length);
             std::string_view body = get_save_string();
