@@ -22,6 +22,10 @@ void Server::start()
 
 void Server::send_response(Response &response) const
 {
+    Date &date = response.get_or_create_header<Date>();
+    date.time =
+        std::chrono::floor<std::chrono::seconds>(std::chrono::utc_clock::now());
+
     std::vector<Byte> raw_response = response.to_bytes();
     send_message(raw_response);
 }
