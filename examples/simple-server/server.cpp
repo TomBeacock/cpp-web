@@ -11,7 +11,7 @@ Server::Server(std::string_view ip_address, Nat16 port)
     : Http::Server(ip_address, port, {allowed_versions, allowed_methods})
 {}
 
-void Server::on_request_received(const Web::Http::Request &request)
+void Server::on_request_received(Web::Http::Request &request)
 {
     std::string content =
         "<!DOCTYPE html><html lang=\"en\"><body><p>Hello world</p><img "

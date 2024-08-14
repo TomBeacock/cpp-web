@@ -5,6 +5,5 @@ class Server : public Web::Http::Server {
     Server(std::string_view ip_address, Nat16 port);
 
   protected:
-    virtual void on_request_received(
-        const Web::Http::Request &request) override;
+    virtual void on_request_received(Web::Http::Request &request) override;
 };
