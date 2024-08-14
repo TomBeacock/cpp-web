@@ -5,6 +5,7 @@
 
 #include <types/types.h>
 
+#include <chrono>
 #include <optional>
 #include <string>
 #include <vector>
@@ -200,6 +201,16 @@ struct ContentType : public Header {
     std::string boundary;
 
     ContentType();
+
+    virtual std::string to_string() const override;
+};
+
+struct Date : public Header {
+    static constexpr auto header_type = Header::Type::Date;
+
+    std::chrono::utc_seconds time;
+
+    Date();
 
     virtual std::string to_string() const override;
 };

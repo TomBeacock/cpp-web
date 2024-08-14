@@ -390,6 +390,16 @@ std::string ContentType::to_string() const
     return ss.str();
 }
 
+Date::Date() : Header(Header::Type::Date) {}
+
+std::string Date::to_string() const
+{
+    return std::format(
+        std::locale::classic(),
+        "{0:%a}, {0:%d} {0:%b} {0:%Y} {0:%H}:{0:%M}:{0:%S} GMT",
+        this->time);
+}
+
 Host::Host() : Header(Header::Type::Host) {}
 
 std::string Host::to_string() const
